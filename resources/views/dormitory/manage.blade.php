@@ -110,7 +110,7 @@
                                     <td>
                                         @if (in_array($column['value'], ['status', 'lease_status'], true))
                                             <span class="badge badge-{{ strtolower($cellValue) }}">{{ $cellValue }}</span>
-                                        @elseif (in_array($column['value'], ['monthly_rate'], true))
+                                        @elseif (in_array($column['value'], ['monthly_rate', 'security_deposit'], true))
                                             {{ number_format((float) $cellValue, 2) }}
                                         @else
                                             {{ $cellValue }}

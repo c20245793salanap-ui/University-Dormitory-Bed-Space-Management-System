@@ -344,6 +344,7 @@ class DormitoryService
                     ['label' => 'Room', 'value' => 'bedSlot.dormRoom.room_number'],
                     ['label' => 'Bed', 'value' => 'bedSlot.bed_slot'],
                     ['label' => 'Monthly rate', 'value' => 'monthly_rate'],
+                    ['label' => 'Security deposit', 'value' => 'security_deposit'],
                     ['label' => 'Lease status', 'value' => 'lease_status'],
                 ],
                 'searchable' => ['lease_status'],
@@ -373,12 +374,6 @@ class DormitoryService
 
         if (isset($data['building_name']) && is_string($data['building_name'])) {
             $data['building_name'] = Str::title($data['building_name']);
-        }
-
-        foreach (['monthly_rate', 'security_deposit', 'total_paid'] as $amountField) {
-            if (isset($data[$amountField])) {
-                $data[$amountField] = number_format((float) $data[$amountField], 2, '.', '');
-            }
         }
 
         return $data;

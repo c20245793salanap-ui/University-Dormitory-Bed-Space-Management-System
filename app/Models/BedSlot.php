@@ -29,3 +29,4 @@ class BedSlot extends Model
         return $this->hasMany(DormContract::class);
     }
 }
+//

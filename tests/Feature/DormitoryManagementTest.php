@@ -168,10 +168,10 @@ class DormitoryManagementTest extends TestCase
         $contractData = [
             'student_id' => $student->id,
             'bed_slot_id' => $slot->id,
-            'monthly_rate' => 2500,
+            'monthly_rate' => '2500.75',
             'contract_start' => '2026-11-01',
             'contract_end' => '2027-05-31',
-            'security_deposit' => 2500,
+            'security_deposit' => '1750.25',
             'total_paid' => 0,
             'lease_status' => 'Pending',
         ];
@@ -182,12 +182,68 @@ class DormitoryManagementTest extends TestCase
         $this->assertDatabaseHas('dorm_contracts', [
             'student_id' => $student->id,
             'bed_slot_id' => $slot->id,
+            'monthly_rate' => '2500.75',
+            'security_deposit' => '1750.25',
             'lease_status' => 'Pending',
         ]);
         $this->assertSame(
             '2026-11-01',
             DormContract::query()->firstOrFail()->contract_start->toDateString(),
         );
+
+        $this->get(route('dormitory.contracts.index'))
+            ->assertOk()
+            ->assertSee('Monthly rate')
+            ->assertSee('Security deposit')
+            ->assertSee('2,500.75')
+            ->assertSee('1,750.25');
+    }
+
+    public function test_contract_monthly_rate_and_security_deposit_can_be_updated(): void
+    {
+        $contract = DormContract::factory()->create([
+            'monthly_rate' => '1500.00',
+            'security_deposit' => '1500.00',
+        ]);
+
+        $this->put(route('dormitory.contracts.update', ['contract' => $contract->id]), [
+            'student_id' => $contract->student_id,
+            'bed_slot_id' => $contract->bed_slot_id,
+            'monthly_rate' => '2750.50',
+            'contract_start' => $contract->contract_start->toDateString(),
+            'contract_end' => $contract->contract_end->toDateString(),
+            'security_deposit' => '3250.75',
+            'total_paid' => $contract->total_paid,
+            'lease_status' => $contract->lease_status,
+        ])->assertRedirect(route('dormitory.contracts.index'));
+
+        $this->assertDatabaseHas('dorm_contracts', [
+            'id' => $contract->id,
+            'monthly_rate' => '2750.50',
+            'security_deposit' => '3250.75',
+        ]);
+    }
+
+    public function test_contract_amounts_reject_more_than_two_decimal_places(): void
+    {
+        $student = Student::factory()->create();
+        $slot = BedSlot::factory()->create();
+
+        $this->from(route('dormitory.contracts.index'))
+            ->post(route('dormitory.contracts.store'), [
+                'student_id' => $student->id,
+                'bed_slot_id' => $slot->id,
+                'monthly_rate' => '2500.123',
+                'contract_start' => '2026-11-01',
+                'contract_end' => '2027-05-31',
+                'security_deposit' => '1750.25',
+                'total_paid' => 0,
+                'lease_status' => 'Pending',
+            ])
+            ->assertRedirect(route('dormitory.contracts.index'))
+            ->assertSessionHasErrors('monthly_rate');
+
+        $this->assertDatabaseCount('dorm_contracts', 0);
     }
 
     public function test_active_contract_lifecycle_synchronizes_bed_occupancy(): void
